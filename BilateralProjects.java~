@@ -1,0 +1,139 @@
+import java.io.*;
+import java.util.*;
+
+public class BilateralProjects
+{
+  private List<Project> projects;
+  private List<Project> copyProjects;
+  
+  private Map<String, Truple> map;
+  
+  public BilateralProjects() throws Exception
+  {
+    copyProjects = new LinkedList<Project>();
+    projects = new LinkedList<Project>();
+    map = new TreeMap<String, Truple>();
+
+    buildProjectsList();
+  }
+  private void buildProjectsList() throws Exception
+  {
+    BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+    int numLines = Integer.parseInt(br.readLine());
+    for(int i = 0; i<numLines; i++)
+    {
+      String line = br.readLine();
+      StringTokenizer tok = new StringTokenizer(line);
+      
+      String first = tok.nextToken();
+      String second = tok.nextToken();
+      
+      Project p1 = new Project(first, second);
+      
+      projects.add(p1);
+      copyProjects.add(p1);
+      
+      if(map.keySet().contains(first))
+      {
+        Truple truple = map.get(first);
+        truple.addPartner(second);
+        map.put(first, truple);
+      }
+      else
+      {
+        Truple truple = new Truple(first, second);
+        map.put(first, truple);
+      }
+      if(map.keySet().contains(second))
+      {
+        Truple truple = map.get(second);
+        truple.addPartner(first);
+        map.put(second, truple);
+      }
+      else
+      {
+        Truple truple = new Truple(second, first);
+        map.put(second, truple);
+      }
+    }
+  }
+  public List<String> findInvitees(String friend)
+  {
+    List<String> invitees = new LinkedList<String>();
+    if(friend!=null)
+    {
+      invitees.add(friend);
+      projects = copyProjects;
+      projects.removeAll(getProjectMates(friend));
+    }
+    while(true)
+    {
+      //find the person in the most projects
+      String max = getMostActive();
+      invitees.add(max);
+      projects.removeAll(getProjectMates(max));
+      
+      if(projects.size()==0)
+        break;
+    }
+    return invitees;
+  }
+  
+  private String getMostActive()
+  {
+    String max = "";
+    int maxCount = 0;
+    
+    for(String s: map.keySet())
+    {
+      int count = map.get(s).getCount();
+      if(count>maxCount)
+      {
+        max = s;
+        maxCount = count;
+      }
+    }
+    return max;
+  }
+  private List<Project> getProjectMates(String employee)
+  {
+    List<Project> list = new LinkedList<Project>();
+    for(Project p: projects)
+    {
+      if(p.contains(employee))
+      {
+        list.add(p);
+      }
+    }
+    for(String s: map.keySet())
+    {
+      Truple truple = map.get(s);
+      truple.removePartner(employee);
+    }
+    return list;
+  }
+  
+  public void printInvitees(List<String> invitees)
+  {
+    System.out.println(invitees.size());
+    for(String s: invitees)
+    {
+      System.out.println(s);
+    }
+  }
+  public static void main(String [] args) throws Exception
+  {
+    BilateralProjects bp = new BilateralProjects();
+    List<String> nonFriendList = bp.findInvitees(null);
+    if(nonFriendList.contains("1009"))
+    {
+      bp.printInvitees(nonFriendList);
+      return;
+    }
+    List<String> friendList = bp.findInvitees("1009");
+    if(nonFriendList.size()<friendList.size())
+      bp.printInvitees(nonFriendList);
+    else
+      bp.printInvitees(friendList);
+  }
+}
